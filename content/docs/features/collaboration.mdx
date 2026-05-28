@@ -1,32 +1,118 @@
 ---
 title: Collaboration
-description: Share collections via git, not a SaaS account.
+description: Share collections via short URL or QR. Push to Vercel, pull on another machine.
 ---
 
-Koala collections are plain files. Check them into your repo.
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
 
-## File format
+Koala collaboration uses your own Vercel account as the backend — no Koala-hosted servers, no accounts on our end. Collections push as immutable bundles to Edge Config, share via short URL.
 
-Each collection lives at `~/Library/Application Support/Koala/collections/<name>.koala.json`.
-You can also point Koala at an existing folder:
-
-```bash
-File → Open Collection From Folder...
-```
-
-## Recommended layout
+## How it works
 
 ```
-my-app/
-  api-collections/
-    payments.koala.json
-    users.koala.json
-    .env.koala.example
+Machine A                              Machine B
+ ┌──────┐    push (Vercel API)         ┌──────┐
+ │Koala │ ──────────────────────────►  │ Koala│
+ └──────┘    short URL / QR            └──────┘
+              ↓                            ↑
+       Vercel Edge Config       pull (Vercel API)
+       ~/koala-collab/<id>/bundle.json
 ```
 
-Commit the collections. Don't commit your local `.env.koala`.
+Authorization comes from your Vercel Personal Access Token (same one as mock servers). No third-party intermediary.
 
-## Workspaces
+## One-time setup
 
-A **workspace** is just a list of collection paths.
-Switch via `⌘⇧W`. Each workspace remembers its own active tabs.
+Same as [Mock Server](/docs/features/mock-server) — Settings → Vercel → paste token → Save.
+
+## Push a collection
+
+<Steps>
+
+<Step>
+Sidebar → right-click any collection → **Push to Vercel**.
+</Step>
+
+<Step>
+Pick a short slug (or accept the auto-generated one). Click **Push**.
+</Step>
+
+<Step>
+Koala serializes the collection (requests + environments + scripts), uploads to Edge Config under `koala-collab/{slug}`.
+</Step>
+
+<Step>
+Sharing options appear:
+- **Copy short URL** (`https://koala-collab-abc.vercel.app/c/{slug}`)
+- **Copy share key** (UUID + auth token, paste into another Koala)
+- **Show QR code** (scan from phone or another Mac)
+- **Revoke** (delete from Vercel)
+</Step>
+
+</Steps>
+
+## Pull on another machine
+
+<Steps>
+
+<Step>
+Welcome screen → **Join Project** OR Sidebar → **+ → Join from share key**.
+</Step>
+
+<Step>
+Paste the share key. Koala fetches the bundle, deserializes, creates a local collection.
+</Step>
+
+<Step>
+Optional: enable **Auto-pull** in the project settings — Koala re-fetches on every app launch + every N hours.
+</Step>
+
+</Steps>
+
+## What's included in the bundle
+
+| Included | Excluded |
+|---|---|
+| Requests (method, URL, headers, body, scripts) | Vault secrets |
+| Folder structure | Per-machine history |
+| Environment definitions + variable keys | Environment **values** (defaults blank, user fills locally) |
+| Pre/post scripts | Local cookies |
+| Test definitions | Mock server endpoints (separate sync) |
+
+<Callout type="info">
+  Vault values intentionally stay local. Share collections freely without
+  leaking secrets — each user enters their own tokens.
+</Callout>
+
+## Push vs Sync
+
+| Mode | Behavior |
+|---|---|
+| **Push** | One-shot upload. Recipients pull at will. No conflict resolution. |
+| **Sync** (Pro) | Bidirectional — changes from any team member auto-merge on next launch. |
+
+Sync is currently in beta for Pro users — opt in via Settings → Collaboration → "Enable beta sync".
+
+## Role-based permissions (Pro)
+
+Pro tier adds per-bundle roles:
+
+- **Owner** — push, edit, revoke, manage members.
+- **Editor** — push changes.
+- **Viewer** — pull only.
+
+Manage via project settings → Collaboration → Members tab.
+
+## Revoking a share
+
+Right-click collection → **Revoke share**. Koala deletes the Edge Config entry. Future pulls fail with 404.
+
+Members who already have a local copy keep it, but no longer receive updates.
+
+## Best practices
+
+- **Pin Koala version** in your team's onboarding doc — bundle format may evolve.
+- **Don't push secrets** — even in pre-scripts as constants. Always use `koala.vault.get('key')`.
+- **Use Sync (Pro) for team workflows**, Push for one-off sharing.
+- **Combine with [Mock Server](/docs/features/mock-server)** — share a collection + mock URL so teammates can run end-to-end immediately.

@@ -1,41 +1,161 @@
 ---
-title: Scripts & tests
-description: JavaScript before every request and after every response.
+title: Scripts & Tests
+description: JavaScript pre/post hooks and assertions — Postman-compatible API.
 ---
 
-Koala runs JS in a sandboxed JavaScriptCore VM. No Node modules — just
-a curated stdlib that mirrors Postman where it makes sense.
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
-## Pre-request
+Every request can run JavaScript before sending (pre-script) and after receiving (post-script / tests). Executed by **JavaScriptCore** — the same engine Safari uses. Sandboxed, no Node access.
+
+## API surface
+
+Koala exposes a `koala` global. Postman scripts often work unchanged with `pm` → `koala` rename.
+
+| Object | Purpose |
+|---|---|
+| `koala.request` | Read/mutate the outbound request (URL, method, headers, body) |
+| `koala.response` | Read-only — status, headers, body, time |
+| `koala.env` | Read/write environment variables (persisted) |
+| `koala.globals` | Read/write global vars (across envs) |
+| `koala.vault` | **Read-only** — keychain secrets, never returns to script logs |
+| `koala.test()` | Register an assertion |
+| `koala.expect()` | Chai-style fluent assertions |
+
+## Pre-request script
+
+Runs before the request is sent. Use it to compute a signature, refresh a token, generate a nonce.
 
 ```js
+// Pre-script: HMAC-sign the request body
 const ts = Date.now();
-koala.headers.set('X-Timestamp', ts);
-koala.headers.set('X-Sig', await koala.hmac('sha256', vault.signing_key, ts));
+const body = koala.request.body || '';
+const secret = koala.vault.get('signing_secret');
+const sig = koala.crypto.hmacSha256(ts + body, secret);
+
+koala.request.headers.set('X-Timestamp', ts);
+koala.request.headers.set('X-Signature', sig);
 ```
 
-## Tests
+Built-in libs available:
+
+- `koala.crypto` — hmacSha256, sha256, md5, base64.
+- `koala.uuid()` — v4 UUID.
+- `koala.now()` — Date.now() shortcut.
+- Standard `Math`, `JSON`, `Date`, `RegExp`, `String`, `Array`, `Object`, `Promise`.
+
+## Tests / post-script
+
+Runs after the response. Make assertions, persist data for the next request.
 
 ```js
-test('responds within SLA', () => {
-  expect(response.timeMs).toBeLessThan(250);
+koala.test('status is 201', () => {
+  koala.expect(koala.response.status).to.equal(201);
 });
 
-test('user payload is shaped right', () => {
-  expect(response.json.user).toMatchSchema({
-    id: 'string',
-    email: 'string',
-    plan: ['free', 'pro', 'lifetime'],
-  });
+koala.test('body has user id', () => {
+  const body = koala.response.json();
+  koala.expect(body.id).to.be.a('string');
+  koala.expect(body.email).to.match(/@/);
+});
+
+// Capture for the next request
+const token = koala.response.json().accessToken;
+koala.env.set('auth_token', token);
+```
+
+Results appear in the **Tests** tab of the response panel. Pass/fail count badge on the tab.
+
+## Chained scripts in collections
+
+When running a collection (or via [scheduler](/docs/features/automation)):
+
+- Each request's pre-script runs first.
+- After response, post-script runs.
+- A request can set env/global vars that the next request reads (e.g. `auth_token` flow).
+- Test failures don't stop the run by default — toggle "Stop on failure" in run config.
+
+## Snapshot diff in scripts
+
+<Tabs items={["Manual diff", "Programmatic diff"]}>
+<Tab value="Manual diff">
+
+`⌘⇧D` in the response toolbar — see the conversation's "Snapshot diff" section in [REST client](/docs/features/rest-client).
+
+</Tab>
+<Tab value="Programmatic diff">
+
+```js
+const previous = koala.history.previous();  // last response for this request
+const diff = koala.diff.json(previous.body, koala.response.body);
+koala.test('no breaking changes', () => {
+  koala.expect(diff.removed).to.be.empty;
 });
 ```
 
-Failed tests fail the collection runner, which is what you want in CI.
+</Tab>
+</Tabs>
 
-## koala.* globals
+## Collection runner
 
-- `koala.headers`, `koala.params`, `koala.body`
-- `koala.vault.get(key)`
-- `koala.cookies.get(domain)`
-- `koala.env.get(name)`
-- `koala.hmac(algo, key, data)`
+Sidebar → right-click collection → **Run…**. Or `⌘⇧R`.
+
+```
+✓ POST /auth/login         201  88ms   (3 tests passed)
+✓ GET  /users/me           200  31ms   (2 tests passed)
+✗ POST /users              400  20ms   (1 of 3 tests failed)
+✓ DELETE /users/123        204  18ms   (1 test passed)
+```
+
+Options:
+
+- **Iterations** — repeat N times. Use with data-driven runs (CSV / JSON input file).
+- **Delay** — ms between requests (rate-limit friendly).
+- **SLA budget** — fail run if total time exceeds X ms.
+- **Stop on failure** — bail on first failure.
+- **Webhook on failure** — POST run summary to a URL (works with Slack incoming webhook).
+
+## Examples
+
+<Tabs items={["Login + use token", "Pagination loop", "Retry with backoff"]}>
+<Tab value="Login + use token">
+
+**Request 1: POST /auth/login** — post-script:
+
+```js
+koala.env.set('token', koala.response.json().accessToken);
+```
+
+**Request 2: GET /users/me** — headers:
+
+```
+Authorization: Bearer {{token}}
+```
+
+</Tab>
+<Tab value="Pagination loop">
+
+**Tests tab:**
+
+```js
+const body = koala.response.json();
+if (body.nextCursor) {
+  koala.env.set('cursor', body.nextCursor);
+  koala.runner.repeat();   // re-run this request
+}
+```
+
+</Tab>
+<Tab value="Retry with backoff">
+
+**Tests tab:**
+
+```js
+if (koala.response.status >= 500 && koala.runner.attempt < 3) {
+  const wait = Math.pow(2, koala.runner.attempt) * 1000;  // 1s, 2s, 4s
+  koala.runner.retryAfter(wait);
+}
+```
+
+</Tab>
+</Tabs>

@@ -1,35 +1,124 @@
 ---
-title: Automation scheduler
-description: Cron triggers, retries, and structured alerts. (Pro)
+title: Automation Scheduler
+description: Run collections on a cron schedule, with webhook alerts on failure.
 ---
 
-> **Pro feature.** Available on Pro and Lifetime plans.
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
 
-Schedule collection runs on a cron, get pinged when they break.
+The Automation Scheduler runs collection runs on a cron-style schedule. Use it for synthetic monitoring, regression checks, or scheduled data syncs.
 
-## Define a schedule
+<Callout type="warn">
+  **Pro feature.** Free tier hides automation; Pro license unlocks it.
+</Callout>
+
+## Create a schedule
+
+<Steps>
+
+<Step>
+Sidebar → **Automation** (clock icon).
+</Step>
+
+<Step>
+Click **+ New Schedule**.
+</Step>
+
+<Step>
+Pick:
+- **Collection** to run
+- **Environment** to apply
+- **Cadence:** every N minutes, hourly, daily at HH:MM, custom cron expression
+- **Webhook on failure** (optional): URL to POST run summary
+</Step>
+
+<Step>
+Click **Save**. Schedule starts immediately on the next matching tick.
+</Step>
+
+</Steps>
+
+## How it runs
+
+- Tick check: every 30 seconds, Koala compares `lastRunAt` to schedule.
+- On match: spawn the collection runner in the background (no UI lock).
+- Each run logs to `~/Library/Application Support/Koala/automation-runs.sqlite`.
+- Status badge on the schedule row updates: ✓ (success), ✗ (failure), ⟳ (running).
+
+## What happens when Koala is closed?
+
+| Scenario | Behavior |
+|---|---|
+| Koala open, screen locked | Runs as scheduled. |
+| Koala closed, device on | **Misses** scheduled runs (Koala not running to tick). |
+| Device asleep / off | Misses runs. |
+| Koala reopened | **Catch-up window** (default 24h): runs any missed jobs once on launch. |
+
+For 24/7 reliability, future Pro tier will offer a **LaunchAgent helper** that ticks even when Koala is closed.
+
+## Webhook payload
+
+When `webhook on failure` set, Koala POSTs to the URL:
+
+```json
+{
+  "schedule_id": "uuid",
+  "schedule_name": "Production health check",
+  "collection": "API smoke tests",
+  "environment": "production",
+  "started_at": "2026-05-29T03:42:00Z",
+  "duration_ms": 4220,
+  "total": 12,
+  "passed": 11,
+  "failed": 1,
+  "failures": [
+    {
+      "request": "GET /users/me",
+      "status": 502,
+      "duration_ms": 120,
+      "test_failures": ["status is 200"]
+    }
+  ],
+  "run_url": "koala://automation/runs/abc123"
+}
+```
+
+Slack-compatible if you point at an incoming webhook URL.
+
+## SLA budget
+
+Per schedule, set a max-duration ms. If the run exceeds, it's marked as failure even if all individual requests passed. Useful for catching API performance regressions.
 
 ```
-schedule: "*/15 * * * *"   # every 15 minutes
-collection: payments-smoke
-retries: 2
-backoff: jitter
-alerts:
-  - type: webhook
-    url: https://hooks.slack.com/...
-  - type: email
-    to: oncall@example.com
+Schedule: nightly-smoke
+SLA: 5000 ms
+Actual: 6240 ms → FAIL (with passing tests)
 ```
 
-Save as `automation/payments.koala.yaml` next to your collection.
+## Run history
 
-## Alerts
+Click any schedule → right panel shows:
 
-- **Webhook** — POSTs a structured JSON payload with the failing test name,
-  response body, and timing breakdown.
-- **Email** — sends a digest via your configured Resend / SMTP integration.
+- **Last 50 runs** table with status, duration, failure count.
+- **Click a row** → full per-request breakdown, response bodies (sampled), test output.
+- **Trend chart** — pass rate + p50/p95 duration over time.
 
-## Local vs cloud
+## Data-driven runs
 
-Schedules run locally as long as Koala is open. If you need 24/7,
-deploy them to Vercel Cron via **Automation → Deploy schedule**.
+Attach a CSV or JSON file when creating the schedule. Each row becomes one iteration:
+
+```csv
+email,password
+alice@x.com,secret1
+bob@y.com,secret2
+charlie@z.com,secret3
+```
+
+Scripts reference current iteration via `koala.iteration.data`:
+
+```js
+const { email, password } = koala.iteration.data;
+koala.request.body = JSON.stringify({ email, password });
+```
+
+3 iterations = 3 separate runs per tick.

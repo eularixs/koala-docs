@@ -1,29 +1,99 @@
 ---
 title: Pricing
-description: Free, or Pro for $15 one-time.
+description: Free forever, or Pro $15 one-time. No subscriptions, no per-seat fees.
 ---
 
-| Plan | Price | What you get |
-| --- | --- | --- |
-| Free | $0 | REST, GraphQL, WebSockets, scripts, local collections |
-| Pro | $15 once | Everything in Free + mock server, recording proxy, automation, global search, 3 devices, priority support |
+import { Callout } from 'fumadocs-ui/components/callout';
 
-## Licensing
+Koala has two tiers: **Free** and **Pro**. One-time purchase, no monthly fees, no per-seat pricing.
 
-Each Pro license activates up to 3 devices, easily transferable via
-your account dashboard. You can deactivate a device at any time from
-[the dashboard](/admin) or from the macOS app at **Settings → License**.
+## Free
 
-Licenses are RSA-signed receipts that the app verifies offline.
-Internet is required for activation and once every 90 days for
-revalidation.
+Everything most developers need:
 
-## Updates
+- ✅ REST client (multi-tab, environments, vault, history)
+- ✅ GraphQL builder (introspection, subscriptions)
+- ✅ WebSocket / SSE clients
+- ✅ Pre/post JavaScript hooks
+- ✅ Mock server (deploy to **your** Vercel — uses your bandwidth, not ours)
+- ✅ Collaboration push/pull (basic, no roles)
+- ✅ Unlimited collections, requests, environments
+- ✅ Native macOS, all keyboard shortcuts
+- ✅ Auto-update (stable channel) via Sparkle
+- ✅ Local SQLite history with global search
 
-All updates within v0.x and v1.x are included with your Pro purchase.
-Future major versions (v2.0+) may require a separate purchase — TBD.
+**Price:** $0 forever. No account required.
 
-## Refunds
+## Pro — $15 one-time
 
-If Koala isn't for you, email `hello@koala.app` within 14 days and we'll
-refund without questions.
+Unlock the power-user features:
+
+- ✨ **Recording Proxy with HTTPS MITM** — intercept any browser/app traffic, auto-organize into collection
+- ✨ **Automation Scheduler** — cron-style runs with webhook alerts
+- ✨ **Role-based collaboration** — Owner / Editor / Viewer permissions
+- ✨ **Bidirectional sync** (beta) — multi-user team workflows
+- ✨ **Beta channel** — early access to new features via Sparkle
+- ✨ **LaunchAgent helper** (coming) — schedules run even when Koala closed
+- ✨ **Priority email support** — typically <24h response
+
+**Price:** $15 one-time. License covers **3 devices** (transferable via your account dashboard).
+
+[Buy Pro →](https://koala.eularix.com/pricing)
+
+<Callout type="info">
+  **Why one-time?** We think SaaS-priced API clients are bullshit. You bought a
+  hammer once; the hammer doesn't bill you monthly. Koala doesn't either.
+</Callout>
+
+## What's included in updates
+
+- **v0.x and v1.x** updates — included in your Pro license.
+- **v2.0+** — may require a separate purchase (TBD, but minimum 24-month gap).
+
+## Refund policy
+
+14-day no-questions-asked refund. Email [dimsmauls@gmail.com](mailto:dimsmauls@gmail.com) — we wire it back same business day.
+
+## Educational / open-source discount
+
+50% off any plan. Email from your `.edu` address (students) or with proof of OSS maintainer status (3+ public repos with active commits).
+
+## Pricing FAQ
+
+**Q: Can I use Koala commercially?**
+A: Yes. Both Free and Pro have no commercial restrictions. You can use Koala at work, build APIs you sell, etc.
+
+**Q: Do I need an internet connection?**
+A: No. Koala is offline-first. License validation runs once per 90 days, cached locally — works offline in between.
+
+**Q: What happens if I cancel?**
+A: There's nothing to cancel. One-time purchase = permanent license. You keep the app forever, including all v0.x + v1.x updates.
+
+**Q: Can I transfer my license to a new Mac?**
+A: Yes. Settings → License → Deactivate on the old Mac. Reactivate on new. 3-device limit applies (resets every 12 months).
+
+**Q: Team pricing?**
+A: Buy multiple individual licenses. We don't do per-seat enterprise pricing — that pricing model funds bullshit overhead, not the product.
+
+**Q: Why not free Pro for open-source?**
+A: 50% educational/OSS discount → $7.50. We need to fund development; even a small fee filters out the "free everything" crowd that demands unlimited support without contributing.
+
+## Compare
+
+| | Free | Pro |
+|---|:---:|:---:|
+| REST + GraphQL + WebSocket | ✅ | ✅ |
+| Mock servers (deploy to your Vercel) | ✅ | ✅ |
+| Pre/post scripts | ✅ | ✅ |
+| Snapshot diff | ✅ | ✅ |
+| Push collab (one-shot) | ✅ | ✅ |
+| Devices | 1 | 3 |
+| Recording proxy + HTTPS MITM | — | ✅ |
+| Automation scheduler | — | ✅ |
+| Bidirectional sync (beta) | — | ✅ |
+| Role-based collab | — | ✅ |
+| Beta channel updates | — | ✅ |
+| Priority email support | — | ✅ |
+| Updates included | Patches | All v0.x + v1.x |
+
+Ready? [Get Pro →](https://koala.eularix.com/pricing)

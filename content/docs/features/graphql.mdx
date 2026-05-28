@@ -1,27 +1,126 @@
 ---
-title: GraphQL
-description: First-class GraphQL — introspection, fragments, subscriptions.
+title: GraphQL Builder
+description: Schema introspection, query composer, variables, fragments — without leaving Koala.
 ---
 
-Koala speaks GraphQL natively. No "convert to GraphQL" mode.
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
 
-## Connect
+Koala ships a Hasura-style GraphQL builder. No external IDE needed.
 
-Point at any GraphQL endpoint:
+## Quick start
 
+<Steps>
+
+<Step>
+### New GraphQL tab
+
+`⌘N` → method dropdown → **GraphQL**. Address bar holds your endpoint (e.g. `https://api.github.com/graphql`).
+</Step>
+
+<Step>
+### Add auth
+
+Headers tab → `Authorization: Bearer {{vault.github_token}}`. GitHub's GraphQL API requires a personal access token with `read:user` minimum.
+</Step>
+
+<Step>
+### Introspect schema
+
+Click **Refresh Schema** (⟳ icon). Koala sends a standard `IntrospectionQuery` and caches the result. Sidebar populates with types, queries, mutations, subscriptions.
+</Step>
+
+<Step>
+### Compose visually
+
+Tick fields in the schema explorer. Koala builds the query for you. Or type freehand — autocomplete on `.`, on field selection, on argument names.
+</Step>
+
+<Step>
+### Send
+
+`⌘↵`. Response panel shows the JSON data + errors array.
+</Step>
+
+</Steps>
+
+## Variables
+
+Variables tab — JSON object passed alongside the query:
+
+```json
+{
+  "userId": "123",
+  "limit": 10
+}
 ```
-https://api.example.com/graphql
+
+Reference them in the query:
+
+```graphql
+query GetUser($userId: ID!, $limit: Int!) {
+  user(id: $userId) {
+    posts(first: $limit) {
+      title
+    }
+  }
+}
 ```
 
-Koala runs introspection in the background and populates the schema sidebar.
+Variables themselves can reference env: `"userId": "{{currentUserId}}"`.
 
-## Build queries
+## Fragments
 
-- **Autocomplete** as you type, with field descriptions inline.
-- **Fragments** in a sidebar — drag to insert.
-- **Variables** edited in a structured JSON pane.
+Reusable selection sets. Define once, use many times:
 
-## Subscriptions
+```graphql
+fragment UserCore on User {
+  id
+  email
+  displayName
+  avatarUrl
+}
 
-Subscriptions just work. Koala opens a WebSocket and renders pushed
-messages in the timeline view.
+query Me {
+  me {
+    ...UserCore
+  }
+}
+
+query GetUser($id: ID!) {
+  user(id: $id) {
+    ...UserCore
+  }
+}
+```
+
+Koala recognizes `fragment` definitions and auto-suggests them in selection sets.
+
+## Subscriptions (WebSocket)
+
+GraphQL subscriptions over `graphql-ws` or `graphql-transport-ws`:
+
+1. Method dropdown → **GraphQL Subscription**.
+2. Endpoint: `wss://api.example.com/graphql`.
+3. Auth via headers (sent in `connection_init` payload).
+4. Click **Connect** — Koala opens the WS, sends `connection_init`, then `subscribe` for your query.
+5. Response panel shows live frames as they arrive. Click any to inspect.
+
+## Schema explorer features
+
+- **Type docs panel** — click any type/field to see its description, args, return type.
+- **Filter** — search box at top of explorer (`⌘F` while focused). Match on type name or description.
+- **Deprecated indicator** — strikethrough + warning icon, hover for replacement guidance.
+- **Schema export** — Right-click any type → "Export as SDL" → file pasted to clipboard.
+
+## Tips
+
+<Callout type="tip">
+  Use the **Tests** tab to assert on GraphQL responses. Postman-compatible
+  `koala.test()` API; see [Scripts & Tests](/docs/features/scripts-tests).
+</Callout>
+
+<Callout type="info">
+  GraphQL bodies use the same Monaco editor as JSON. `⌘⇧F` pretty-prints.
+  `⌘/` toggles single-line comment (works in `#` comments inside the query).
+</Callout>

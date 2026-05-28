@@ -1,21 +1,51 @@
 ---
 title: Welcome to Koala
-description: A native macOS API client built for developers who ship.
+description: A native macOS API client for developers who care about speed, privacy, and keyboard ergonomics.
 ---
 
-Koala is a native macOS app for building, testing, and shipping HTTP APIs.
-It's the Postman experience without Electron — keyboard-first, local-first,
-and opinionated about the things that matter.
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
 
-## Why a native client?
+Koala is a **native macOS** API client. Built in Swift, runs as a single ~30 MB
+app, no Electron, no telemetry, no monthly subscription. Your collections live
+on your disk, your secrets in the macOS Keychain.
 
-- **Fast.** Cold-start under 300 ms on M-series Macs.
-- **Local.** Your data lives in `~/Library/Application Support/Koala`. Sync is opt-in.
-- **Secure.** Secrets live in the macOS Keychain, not in a JSON file.
-- **Calm.** No telemetry by default. No "AI assistant" popups.
+<Callout type="info">
+  **New here?** Skip to [Install in 2 minutes](/docs/getting-started) →
+</Callout>
 
-## Where to next
+## Why Koala
 
-- [Getting started](/docs/getting-started) — install in two minutes.
-- [REST client](/docs/features/rest-client) — the daily-driver workflow.
-- [Mock server](/docs/features/mock-server) — deploy a mock to Vercel in one click.
+<Cards>
+  <Card title="Fast" description="Cold-start under 300 ms on Apple Silicon. Sending a request feels instant. No spinning beachballs." />
+  <Card title="Local-first" description="All data in ~/Library/Application Support/Koala. No accounts required for solo work. Pro users opt in to cloud sync." />
+  <Card title="Secure by default" description="Secrets in macOS Keychain. No telemetry. No analytics SDKs. No 'AI assistant' phoning home." />
+  <Card title="Keyboard-driven" description="Cmd+T new tab, Cmd+Enter send, Cmd+F find. Move between requests with arrows. Power users feel at home." />
+</Cards>
+
+## Capabilities
+
+<Cards>
+  <Card href="/docs/features/rest-client" title="REST client" description="Multi-tab composer, history, environments, vault-backed secrets." />
+  <Card href="/docs/features/graphql" title="GraphQL builder" description="Schema introspection, query builder, variables, fragments." />
+  <Card href="/docs/features/mock-server" title="Mock server" description="One-click deploy a Vercel-hosted mock. Stable URL, your domain." />
+  <Card href="/docs/features/recording" title="Recording proxy" description="HTTPS interception with on-the-fly cert minting. Auto-organize captures into collections." />
+  <Card href="/docs/features/scripts-tests" title="Scripts & tests" description="Pre/post JavaScript hooks. Snapshot diffs. Collection runner with SLA budgets." />
+  <Card href="/docs/features/automation" title="Automation scheduler" description="Cron-style runs with webhook alerts on failure. Catch-up on wake." />
+  <Card href="/docs/features/collaboration" title="Collaboration" description="Push collection bundles to Vercel. Share via short URL or QR." />
+</Cards>
+
+## Pricing at a glance
+
+- **Free** — REST, GraphQL, WebSocket/SSE, scripts, mock server. Unlimited
+  collections + requests.
+- **Pro $15 one-time** — Recording proxy with HTTPS MITM, automation scheduler,
+  role-based collab, beta channel early access.
+
+See the [full pricing breakdown](/docs/pricing).
+
+## Get the app
+
+- **Homebrew**: `brew install --cask eularixs/koala/koala`
+- **Direct DMG**: [latest release on GitHub](https://github.com/eularixs/koala/releases/latest)
+- **Source**: [github.com/eularixs/koala](https://github.com/eularixs/koala) — MIT licensed

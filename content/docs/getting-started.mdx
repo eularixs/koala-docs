@@ -1,44 +1,119 @@
 ---
-title: Getting started
-description: Install Koala and send your first request.
+title: Getting Started
+description: Install Koala and send your first request in under 2 minutes.
 ---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 ## Install
 
-### Homebrew (recommended)
+<Tabs items={["Homebrew", "Direct download"]}>
+<Tab value="Homebrew">
 
 ```bash
-brew install --cask koala
+brew install --cask eularixs/koala/koala
 ```
 
-### Direct download
+First-time install adds the tap automatically. Updates come via `brew upgrade`.
 
-Grab the latest `.dmg` from the
-[GitHub releases page](https://github.com/eularixs/koala/releases/latest).
-Drag `Koala.app` to `/Applications`.
+</Tab>
+<Tab value="Direct download">
 
-System requirements: macOS 13 Ventura or later, Apple Silicon or Intel.
+Download the latest `.dmg` from [GitHub releases](https://github.com/eularixs/koala/releases/latest), open it, and drag **Koala.app** to `/Applications`.
 
-## Send your first request
+Because the build is ad-hoc signed (open-source, no paid Developer ID), the first launch may show a Gatekeeper warning. Right-click → **Open** → **Open** to bypass.
 
-1. Press `⌘N` to open a new tab.
-2. Type a URL in the address bar (try `https://api.github.com/zen`).
-3. Press `⌘↵` to send.
+</Tab>
+</Tabs>
 
-That's it — you'll see the response body, headers, timing, and size.
+**System requirements:** macOS 14 Sonoma or later. Apple Silicon recommended; Intel works.
 
-## Set up the Vercel mock server (optional)
+## Your first request
 
-If you want to deploy mock APIs to Vercel, link your account:
+<Steps>
 
-1. Open **Settings → Integrations → Vercel**.
-2. Click **Connect** and authorize the Koala app.
-3. From any collection, click **Deploy mock** and pick a project.
+<Step>
 
-See [Mock server](/docs/features/mock-server) for the full workflow.
+### Open a new request tab
 
-## Next steps
+Press `⌘N` or click **+** in the top toolbar.
 
-- Activate your Pro license: **Settings → License**.
-- Import an existing Postman collection: **File → Import**.
-- Set up the [recording proxy](/docs/features/recording) to capture real traffic.
+</Step>
+
+<Step>
+
+### Type a URL
+
+Try `https://api.github.com/zen`. Method defaults to GET — change with the dropdown or shortcut.
+
+</Step>
+
+<Step>
+
+### Send it
+
+Press `⌘↵` (Cmd+Enter) — response body, headers, status, timing, and size appear on the right.
+
+</Step>
+
+<Step>
+
+### Save it (optional)
+
+Press `⌘S` to save the request to a collection. Cmd+Click in the sidebar to make a new collection on the fly.
+
+</Step>
+
+</Steps>
+
+## Daily-driver shortcuts
+
+| Action | Shortcut |
+|---|---|
+| New request tab | `⌘T` |
+| Send request | `⌘↵` |
+| Save request | `⌘S` |
+| Find in response body | `⌘F` |
+| Global search | `⌘⇧F` |
+| Switch project | `⌘1`, `⌘2`, ... |
+| Toggle sidebar | `⌘⇧S` |
+| Open settings | `⌘,` |
+
+## Create your first environment
+
+Environments hold reusable variables (`{{baseUrl}}`, `{{apiKey}}`, ...).
+
+<Steps>
+
+<Step>
+Sidebar → **Environments** tab → click **+**.
+</Step>
+
+<Step>
+Name it `Development`, pick a color, click **Create**.
+</Step>
+
+<Step>
+The right panel opens — add a variable: key `baseUrl`, value `https://api.staging.example.com`.
+</Step>
+
+<Step>
+Top toolbar → click the env badge → select `Development`. Now any request URL using `{{baseUrl}}` will resolve to your staging server.
+</Step>
+
+</Steps>
+
+<Callout type="tip">
+  Use the **Vault** (`⌘⇧V`) instead of regular variables for secrets — they're
+  stored in the macOS Keychain and never sync to disk in plain text.
+</Callout>
+
+## Where to next
+
+- [REST client deep-dive](/docs/features/rest-client) — multi-tab workflow, body editors, auth.
+- [Mock server](/docs/features/mock-server) — deploy a one-click mock to your Vercel.
+- [Recording proxy](/docs/features/recording) — capture real HTTPS traffic from any browser/app.
+- [Scripts & tests](/docs/features/scripts-tests) — Postman-compatible JS hooks.
+- [Pricing](/docs/pricing) — free vs Pro at a glance.

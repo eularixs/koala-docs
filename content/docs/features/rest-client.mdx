@@ -1,35 +1,117 @@
 ---
-title: REST client
-description: Koala's daily-driver request composer.
+title: REST Client
+description: Multi-tab HTTP composer with environments, vault secrets, and snapshot diff.
 ---
 
-The REST client is the heart of Koala — a multi-tab composer that
-remembers what you typed last week.
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
-## Anatomy of a request
+The REST client is the heart of Koala. Multi-tab composer, native macOS shortcuts, snapshot diffing.
+
+## Anatomy
 
 ```http
-GET https://api.koala.app/v1/users/me
+POST https://api.koala.app/v1/users
 Authorization: Bearer {{vault.api_token}}
-Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "name": "{{name}}"
+}
 ```
 
-- **Address bar.** Type or paste a URL. Method auto-completes on `:`.
-- **Params / Headers / Body.** Tabbed editor below the address bar.
-- **Vault tokens.** `{{vault.xxx}}` resolves from the macOS Keychain.
+Top to bottom:
+
+- **Method dropdown** — GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, custom.
+- **Address bar** — paste any URL, supports `{{env.var}}`, `{{vault.secret}}`, `{{globals.var}}`.
+- **Send button** (or `⌘↵`) — runs through any active pre-script, request, post-script.
+- **Tabs:** Params · Headers · Body · Auth · Scripts · Tests · Notes.
+
+## Request body editors
+
+<Tabs items={["JSON", "Form URL-encoded", "Multipart", "Raw", "Binary"]}>
+<Tab value="JSON">
+
+Monaco-style editor with linting, JSON-path tooling, and pretty-print (`⌘⇧F`). Holds up to 5 MB without lag.
+
+</Tab>
+<Tab value="Form URL-encoded">
+
+Key/value table. Toggle each row on/off without deleting.
+
+</Tab>
+<Tab value="Multipart">
+
+Mix text fields and file uploads in the same form. Files referenced by path stay outside the JSON manifest (no base64 bloat).
+
+</Tab>
+<Tab value="Raw">
+
+Plain text. Set `Content-Type` manually in Headers tab. Useful for XML, SOAP, GraphQL with custom transport.
+
+</Tab>
+<Tab value="Binary">
+
+Pick a file. Koala sets `Content-Length` from the file size and streams the body so memory stays flat regardless of file size.
+
+</Tab>
+</Tabs>
+
+## Auth helpers
+
+Built-in flows under the **Auth** tab:
+
+- **Basic** — username + password, encoded automatically.
+- **Bearer** — paste a token, or reference `{{vault.token}}`.
+- **API key** — header or query param mode.
+- **OAuth 2.0** — authorization code, client credentials, refresh-token flows. Tokens cached in the macOS Keychain.
+
+<Callout type="info">
+  All auth values go through the variable resolver. Use `{{vault.*}}` so the
+  raw secret never lands in the project JSON file.
+</Callout>
+
+## Response panel
+
+After sending, Koala shows:
+
+- **Body** — pretty-printed JSON / XML / HTML / plain text / image / binary preview.
+- **Headers** — sortable list, copy individual values.
+- **Cookies** — sets that the server returned, including `Set-Cookie` domain rewriting.
+- **Timeline** — DNS, TCP, TLS, request, response phases (Sonoma+).
+- **Status badge** — color-coded: 2xx green, 3xx blue, 4xx orange, 5xx red.
+
+### JSON viewer features
+
+- Tree view with collapsible nodes.
+- **JSONPath filter** (`$.data.users[*].email`) — apply live.
+- **Copy as cURL** in the response toolbar — full reproduction including headers.
+
+## Snapshot diff
+
+`⌘⇧D` compares the current response with the previous run. Koala normalizes timestamps and UUIDs so you only see meaningful deltas.
+
+Use case: regression-test that an endpoint still returns the same shape after a deploy.
 
 ## Keyboard shortcuts
 
 | Action | Shortcut |
-| --- | --- |
-| New tab | `⌘N` |
+|---|---|
+| New tab | `⌘T` |
+| Close tab | `⌘W` |
+| Next tab | `⌘⇧]` |
+| Previous tab | `⌘⇧[` |
 | Send | `⌘↵` |
 | Duplicate request | `⌘D` |
-| Diff with last response | `⌘⇧D` |
-| Toggle sidebar | `⌘B` |
+| Diff with last | `⌘⇧D` |
+| Find in body | `⌘F` |
+| Pretty-print JSON | `⌘⇧F` |
+| Toggle sidebar | `⌘⇧S` |
+| Switch project | `⌘1` … `⌘9` |
 
-## Response diffing
+## History
 
-Click **Diff** in the response toolbar to compare against the previous
-run. Koala normalizes timestamps and request IDs so you only see meaningful
-deltas.
+Every send goes into the per-project History sidebar (default cap: 100 entries, configurable in Settings → Storage). Click any entry to re-load into a new tab, or drag into a collection.
+
+History storage is SQLite (since v0.2) — fast global search via `⌘⇧F`.

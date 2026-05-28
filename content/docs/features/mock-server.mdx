@@ -1,28 +1,110 @@
 ---
-title: Mock server
-description: Deploy a Vercel-hosted mock from any collection in one click.
+title: Mock Server
+description: Deploy a static or dynamic mock API to your own Vercel account in under 60 seconds.
 ---
 
-Koala turns any collection into a stable mock API on Vercel.
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
 
-## How it works
+Mock servers in Koala deploy to **your** Vercel account — Koala doesn't host anything. You get stable URLs, your domain, your bandwidth.
 
-1. Open the collection you want to mock.
-2. Click **Deploy mock** in the toolbar.
-3. Pick a Vercel project (or create a new one).
-4. Koala bundles a tiny serverless function with your request/response
-   pairs and deploys it.
+<Callout type="info">
+  Mock server is **Free tier**. Vercel free plan covers most usage; pay Vercel
+  if you need more.
+</Callout>
 
-You get a stable URL like `https://payments-mock.vercel.app`.
+## Setup once
 
-## Response strategies
+<Steps>
 
-- **Last seen.** Replay the most recent real response for each path.
-- **Schema-aware.** Generate fake data that matches your JSON Schema.
-- **Scripted.** Write a JS handler per path for custom logic.
+<Step>
+### Get a Vercel token
 
-## Auth + delays
+Visit [vercel.com/account/tokens](https://vercel.com/account/tokens) → **Create Token** → scope **Full Account** → copy it (Vercel shows it once).
+</Step>
 
-Add a global Bearer token or basic auth challenge from
-**Mock → Settings**. Inject artificial latency or sporadic 5xx
-errors to test client resilience.
+<Step>
+### Add it to Koala
+
+**Settings → Vercel → paste token → Save.** Stored in macOS Keychain.
+</Step>
+
+</Steps>
+
+## Create your first mock
+
+<Steps>
+
+<Step>
+Sidebar → **Mock Servers** → click **+ New**.
+</Step>
+
+<Step>
+Name it, click **Create**. Koala creates a fresh Vercel project, deploys a Next.js mock template, sets up Edge Config storage.
+</Step>
+
+<Step>
+Within ~1 minute the deployment finishes — the mock URL appears (e.g. `https://my-mock-abc.vercel.app`).
+</Step>
+
+<Step>
+Click **+ Endpoint** → method, path, response status, response body (static JSON or programmatic).
+</Step>
+
+<Step>
+Click **Push** — endpoints sync to Vercel Edge Config. Live in ~5 seconds globally.
+</Step>
+
+</Steps>
+
+## Response modes
+
+| Mode | Use case |
+|---|---|
+| **Static JSON** | Return a fixed response. Most common. |
+| **Faker.js** | Generate dynamic data per request (`{{faker.name}}`, `{{faker.uuid}}`). |
+| **Capture replay** | Replay an actual response from your history or recording session. |
+| **Conditional** | Match on request headers/body, return different responses. |
+| **Proxy passthrough** | Forward to a real upstream, optionally modify response. |
+
+## Endpoint patterns
+
+- **Exact**: `/api/users/123` matches only `/api/users/123`.
+- **Wildcard**: `/api/users/:id` matches any segment, captures as `params.id`.
+- **Catch-all**: `/api/**` matches the prefix and everything under.
+- **Query filter**: `/api/users?role=admin` matches only when query present.
+
+Longest-match-wins. Rules sorted by specificity automatically.
+
+## Vercel free plan limits
+
+| Resource | Free plan | Workaround |
+|---|---|---|
+| Edge Configs | 1 per account | Koala auto-reuses the existing one. Endpoint keys are scoped per mock. |
+| Edge Config size | 8 KB read / 512 KB write | Keep individual response bodies under ~50 KB for safety. |
+| Function invocations | 100 GB-hours/month | Plenty for personal + small team usage. |
+
+## Sharing
+
+The mock URL is public on the open internet. To restrict:
+
+- Set **Vercel project → Settings → Protection** to "Vercel Authentication"
+- Or use **Settings → Deployment Protection** (Pro Vercel plan).
+
+Koala can auto-disable protection on create (Settings → Vercel → "Disable protection by default").
+
+## Sync between machines
+
+Each mock is just a Vercel deployment + Koala collection. To use the same mock from another machine:
+
+1. Same Vercel account on both machines (same token in Koala).
+2. Open the project on machine B → Mock Servers list auto-fetches.
+
+For full collection sync (requests + endpoints), use [Collaboration](/docs/features/collaboration) push/pull.
+
+## Troubleshooting
+
+- **`401 You have reached the maximum number of edge configs`** — Vercel Hobby caps at 1. Koala v0.2+ auto-reuses the existing config. Upgrade to Vercel Pro for unlimited.
+- **404 on mock URL** — Edge Config not synced yet. Click **Push** again, wait 10 s.
+- **CORS errors** — set **Allow Origin** header per endpoint (default `*`).
+- **Deployment fails during create** — verify your Vercel token has Full Account scope.

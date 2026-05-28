@@ -1,31 +1,145 @@
 ---
-title: Recording proxy
-description: Capture real HTTP traffic from your machine. (Pro)
+title: Recording Proxy
+description: Intercept HTTPS traffic from any browser or app, auto-group captures into a collection.
 ---
 
-> **Pro feature.** Available on Pro and Lifetime plans.
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
-The recording proxy spins up a local TLS-terminating proxy and routes any
-app on your machine through it. You get real fixtures from real traffic.
+The Recording Proxy is Koala's most powerful Pro feature. It runs an HTTP/HTTPS man-in-the-middle proxy on `localhost:8888`, captures every request, decrypts TLS using a Koala-minted root CA, and groups captures by URL into a savable collection.
 
-## Start a recording
+<Callout type="warn">
+  **Pro feature.** Free tier hides this panel. Pro license enables it system-wide.
+</Callout>
 
-1. Open **Record → New session**.
-2. Click **Trust certificate** (a one-time keychain prompt).
-3. Pick the apps to capture (Safari, your dev server, a CLI tool).
-4. Hit **Start**.
+## Two modes
 
-Everything those apps emit shows up in the timeline live.
+<Tabs items={["Reverse (zero-config)", "Forward (system-wide)"]}>
+<Tab value="Reverse (zero-config)">
 
-## Convert to a collection
+User configures upstream URL(s) in Koala, then visits `localhost:8888` in the browser. Koala forwards to upstream, captures, rewrites cookies/headers/body URLs.
 
-Select any subset of captured requests and click **Save as collection**.
-Koala groups them by host, dedupes near-identical calls, and prompts for
-a name.
+**Best for:** single-domain backend testing, simple SPAs.
 
-## What's NOT captured
+**Limitation:** absolute URLs to other subdomains in JS bundles bypass the proxy.
 
-- Local-only traffic (`localhost` to `localhost`) — opt-in via settings.
-- Apps that use cert pinning (most banking apps).
-- iOS / Android device traffic — use the Network Link Conditioner profile
-  to route a device through your Mac.
+</Tab>
+<Tab value="Forward (system-wide)">
+
+User configures macOS HTTP/HTTPS proxy to `localhost:8888`. Koala intercepts via CONNECT method, mints TLS cert on-the-fly per host, decrypts traffic.
+
+**Best for:** complex SPAs with multi-subdomain backends, full transparent capture, mobile apps via Wi-Fi proxy.
+
+**Setup:** install Koala root CA in keychain once (one-click in app).
+
+</Tab>
+</Tabs>
+
+## Forward mode setup (recommended)
+
+<Steps>
+
+<Step>
+### Generate + install the Koala CA
+
+Settings → Recording → **HTTPS Interception → Generate CA → Install Trust**.
+
+The Install Trust button triggers macOS native Touch ID/password dialog (uses `SecTrustSettingsSetTrustSettings`). Tap your fingerprint, done.
+
+</Step>
+
+<Step>
+### Switch to Forward mode + Start
+
+Recording → Mode: **Forward** → **Start** (port 8888 default).
+
+</Step>
+
+<Step>
+### Enable system proxy
+
+Recording → **System Proxy → Enable** (Touch ID again). Koala writes to macOS network preferences via SystemConfiguration framework.
+
+Alternative: launch Chrome/Brave isolated profile via **Browser Launcher** menu — no admin needed.
+
+</Step>
+
+<Step>
+### Browse normally
+
+Open browser (incognito recommended to skip HSTS cache). Visit any HTTPS site. Koala intercepts + decrypts. Captures appear live in the dashboard.
+
+</Step>
+
+</Steps>
+
+## Capture filters
+
+Skip noise from telemetry, analytics, ads:
+
+- **Skip static assets** (default on) — HTML, CSS, JS, images, fonts, video.
+- **Domain allowlist** — only capture hosts containing your string (e.g. `eularix.com` matches `api.eularix.com`, `auth.eularix.com`).
+- **Path glob** — `/api/**`, `/__auth/*`.
+
+Domain + path filters AND together. Empty allowlist = capture all.
+
+## Auto-grouping
+
+When you click **Save as Project**, Koala groups captures by URL segment:
+
+```
+auth.eularix.com (12)
+  GET  /sign-in              200  142 ms
+  POST /sign-in/email        201  88 ms
+  GET  /me                   200  31 ms
+
+api.eularix.com (8)
+  GET  /users                200  220 ms
+  POST /users                201  340 ms
+```
+
+Becomes a project with one collection per host, one request per unique (method, path).
+
+## Inspect a capture
+
+Click any row → drawer slides up from bottom (Postman-style). Tabs:
+
+- **Request** — method, URL, headers, body.
+- **Response** — status, headers, body (pretty-printed).
+- **Headers** — request + response side-by-side.
+- **Timing** — captured-at, duration, host.
+
+Top of drawer: **Copy as cURL** button — reproduces the full request including headers and body.
+
+## Restore system networking when done
+
+When you stop the proxy session, click **System Proxy → Restore Default** (Touch ID). Or kill Koala — the proxy state stays "orphaned" until you restore (banner warns you).
+
+## Troubleshooting
+
+### Browser shows `ERR_CERT_AUTHORITY_INVALID`
+
+Trust isn't installed. Re-run **Generate CA → Install Trust**. Verify in Keychain Access → login keychain → certificates → "Koala Root CA" → expand Trust → "When using this certificate: Always Trust".
+
+### `ERR_CONNECTION_CLOSED` on every request
+
+Pipeline crash in NIO. Check Console.app (filter: Process = koala) for `[Koala Proxy]` errors. Restart Koala, retry.
+
+### Browser still bypasses (no log entries)
+
+- Chrome QUIC: disable via `chrome://flags` → Experimental QUIC protocol → Disabled
+- HSTS cache: visit in incognito window
+- HTTPS-RR DNS: launch Chrome with `--disable-features=UseDnsHttpsSvcb`
+- Browser launched before proxy enabled: full quit Cmd+Q, reopen
+
+### Garbage body (mojibake) in browser
+
+Upstream returned zstd/brotli encoding. Koala v0.2.1+ overrides outgoing `Accept-Encoding` to `gzip, deflate, br` (skip zstd) — update to latest.
+
+## Pro tip: capture from mobile
+
+1. Connect your iPhone/Android to the same Wi-Fi as your Mac.
+2. iOS: Settings → Wi-Fi → (i) → Configure Proxy → Manual → server = your Mac's IP, port 8888.
+3. Install Koala CA on iPhone: AirDrop the PEM file (Recording → CA → Export PEM) to phone → install profile → Settings → General → About → Certificate Trust → enable Koala CA.
+4. Browse on phone. Captures show in Koala on Mac.

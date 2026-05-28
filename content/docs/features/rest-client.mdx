@@ -1,0 +1,35 @@
+---
+title: REST client
+description: Koala's daily-driver request composer.
+---
+
+The REST client is the heart of Koala — a multi-tab composer that
+remembers what you typed last week.
+
+## Anatomy of a request
+
+```http
+GET https://api.koala.app/v1/users/me
+Authorization: Bearer {{vault.api_token}}
+Accept: application/json
+```
+
+- **Address bar.** Type or paste a URL. Method auto-completes on `:`.
+- **Params / Headers / Body.** Tabbed editor below the address bar.
+- **Vault tokens.** `{{vault.xxx}}` resolves from the macOS Keychain.
+
+## Keyboard shortcuts
+
+| Action | Shortcut |
+| --- | --- |
+| New tab | `⌘N` |
+| Send | `⌘↵` |
+| Duplicate request | `⌘D` |
+| Diff with last response | `⌘⇧D` |
+| Toggle sidebar | `⌘B` |
+
+## Response diffing
+
+Click **Diff** in the response toolbar to compare against the previous
+run. Koala normalizes timestamps and request IDs so you only see meaningful
+deltas.

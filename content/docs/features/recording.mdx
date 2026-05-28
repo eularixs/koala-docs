@@ -1,0 +1,31 @@
+---
+title: Recording proxy
+description: Capture real HTTP traffic from your machine. (Pro)
+---
+
+> **Pro feature.** Available on Pro and Lifetime plans.
+
+The recording proxy spins up a local TLS-terminating proxy and routes any
+app on your machine through it. You get real fixtures from real traffic.
+
+## Start a recording
+
+1. Open **Record → New session**.
+2. Click **Trust certificate** (a one-time keychain prompt).
+3. Pick the apps to capture (Safari, your dev server, a CLI tool).
+4. Hit **Start**.
+
+Everything those apps emit shows up in the timeline live.
+
+## Convert to a collection
+
+Select any subset of captured requests and click **Save as collection**.
+Koala groups them by host, dedupes near-identical calls, and prompts for
+a name.
+
+## What's NOT captured
+
+- Local-only traffic (`localhost` to `localhost`) — opt-in via settings.
+- Apps that use cert pinning (most banking apps).
+- iOS / Android device traffic — use the Network Link Conditioner profile
+  to route a device through your Mac.

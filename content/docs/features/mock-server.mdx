@@ -1,0 +1,28 @@
+---
+title: Mock server
+description: Deploy a Vercel-hosted mock from any collection in one click.
+---
+
+Koala turns any collection into a stable mock API on Vercel.
+
+## How it works
+
+1. Open the collection you want to mock.
+2. Click **Deploy mock** in the toolbar.
+3. Pick a Vercel project (or create a new one).
+4. Koala bundles a tiny serverless function with your request/response
+   pairs and deploys it.
+
+You get a stable URL like `https://payments-mock.vercel.app`.
+
+## Response strategies
+
+- **Last seen.** Replay the most recent real response for each path.
+- **Schema-aware.** Generate fake data that matches your JSON Schema.
+- **Scripted.** Write a JS handler per path for custom logic.
+
+## Auth + delays
+
+Add a global Bearer token or basic auth challenge from
+**Mock → Settings**. Inject artificial latency or sporadic 5xx
+errors to test client resilience.

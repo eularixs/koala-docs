@@ -1,0 +1,35 @@
+---
+title: Automation scheduler
+description: Cron triggers, retries, and structured alerts. (Pro)
+---
+
+> **Pro feature.** Available on Pro and Lifetime plans.
+
+Schedule collection runs on a cron, get pinged when they break.
+
+## Define a schedule
+
+```
+schedule: "*/15 * * * *"   # every 15 minutes
+collection: payments-smoke
+retries: 2
+backoff: jitter
+alerts:
+  - type: webhook
+    url: https://hooks.slack.com/...
+  - type: email
+    to: oncall@example.com
+```
+
+Save as `automation/payments.koala.yaml` next to your collection.
+
+## Alerts
+
+- **Webhook** — POSTs a structured JSON payload with the failing test name,
+  response body, and timing breakdown.
+- **Email** — sends a digest via your configured Resend / SMTP integration.
+
+## Local vs cloud
+
+Schedules run locally as long as Koala is open. If you need 24/7,
+deploy them to Vercel Cron via **Automation → Deploy schedule**.

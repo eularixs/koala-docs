@@ -1,0 +1,41 @@
+---
+title: Scripts & tests
+description: JavaScript before every request and after every response.
+---
+
+Koala runs JS in a sandboxed JavaScriptCore VM. No Node modules — just
+a curated stdlib that mirrors Postman where it makes sense.
+
+## Pre-request
+
+```js
+const ts = Date.now();
+koala.headers.set('X-Timestamp', ts);
+koala.headers.set('X-Sig', await koala.hmac('sha256', vault.signing_key, ts));
+```
+
+## Tests
+
+```js
+test('responds within SLA', () => {
+  expect(response.timeMs).toBeLessThan(250);
+});
+
+test('user payload is shaped right', () => {
+  expect(response.json.user).toMatchSchema({
+    id: 'string',
+    email: 'string',
+    plan: ['free', 'pro', 'lifetime'],
+  });
+});
+```
+
+Failed tests fail the collection runner, which is what you want in CI.
+
+## koala.* globals
+
+- `koala.headers`, `koala.params`, `koala.body`
+- `koala.vault.get(key)`
+- `koala.cookies.get(domain)`
+- `koala.env.get(name)`
+- `koala.hmac(algo, key, data)`

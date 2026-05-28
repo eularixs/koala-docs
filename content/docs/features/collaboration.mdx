@@ -1,0 +1,32 @@
+---
+title: Collaboration
+description: Share collections via git, not a SaaS account.
+---
+
+Koala collections are plain files. Check them into your repo.
+
+## File format
+
+Each collection lives at `~/Library/Application Support/Koala/collections/<name>.koala.json`.
+You can also point Koala at an existing folder:
+
+```bash
+File → Open Collection From Folder...
+```
+
+## Recommended layout
+
+```
+my-app/
+  api-collections/
+    payments.koala.json
+    users.koala.json
+    .env.koala.example
+```
+
+Commit the collections. Don't commit your local `.env.koala`.
+
+## Workspaces
+
+A **workspace** is just a list of collection paths.
+Switch via `⌘⇧W`. Each workspace remembers its own active tabs.

@@ -1,0 +1,44 @@
+---
+title: Getting started
+description: Install Koala and send your first request.
+---
+
+## Install
+
+### Homebrew (recommended)
+
+```bash
+brew install --cask koala
+```
+
+### Direct download
+
+Grab the latest `.dmg` from the
+[GitHub releases page](https://github.com/eularixs/koala/releases/latest).
+Drag `Koala.app` to `/Applications`.
+
+System requirements: macOS 13 Ventura or later, Apple Silicon or Intel.
+
+## Send your first request
+
+1. Press `⌘N` to open a new tab.
+2. Type a URL in the address bar (try `https://api.github.com/zen`).
+3. Press `⌘↵` to send.
+
+That's it — you'll see the response body, headers, timing, and size.
+
+## Set up the Vercel mock server (optional)
+
+If you want to deploy mock APIs to Vercel, link your account:
+
+1. Open **Settings → Integrations → Vercel**.
+2. Click **Connect** and authorize the Koala app.
+3. From any collection, click **Deploy mock** and pick a project.
+
+See [Mock server](/docs/features/mock-server) for the full workflow.
+
+## Next steps
+
+- Activate your Pro license: **Settings → License**.
+- Import an existing Postman collection: **File → Import**.
+- Set up the [recording proxy](/docs/features/recording) to capture real traffic.

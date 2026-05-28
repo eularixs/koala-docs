@@ -1,0 +1,17 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "getting-started",
+    "---Features---",
+    "features/rest-client",
+    "features/graphql",
+    "features/mock-server",
+    "features/scripts-tests",
+    "features/collaboration",
+    "features/recording",
+    "features/automation",
+    "---Account---",
+    "pricing"
+  ]
+}
